@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String?
+  phone       String?
+  address     String?
+  roadAddress String?
+  lat         Float
+  lng         Float
+  naverLink   String?
+  sido        String   // 주소에서 추출한 시/도 (예: 서울특별시)
+  sigungu     String   // 시/군/구 (예: 중구)
+  avgRating   Float    @default(0)
+  reviewCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  reviews     Review[]
+
+  @@unique([name, roadAddress])
+  @@index([lat, lng])
+  @@index([sido, sigungu])
+}
+
+model Review {
+  id           Int        @id @default(autoincrement())
+  restaurantId Int
+  nickname     String
+  rating       Int // 1~5
+  content      String
+  visitedAt    DateTime?
+  authorHash   String // sha256(브라우저 authorToken). 같은 브라우저만 수정·삭제 가능
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, createdAt])
+}
